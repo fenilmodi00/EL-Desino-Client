@@ -1,16 +1,23 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs'
 import { StatusCodes } from 'http-status-codes'
-import { ChatCompletionRequestMessage, Configuration, OpenAIApi } from 'openai'
-
+//import { ChatCompletionRequestMessage, GenerationConfig, OpenAIApi } from 'openai'
+import { GenerationConfig, apiKey } from '@google/generative-ai';
 import { checkApiLimit, increaseApiLimit } from '@/lib/api-limit'
 import { checkSubscription } from '@/lib/subscription'
 
-const configuration = new Configuration({
-  apiKey: process.env.OPENAI_API_KEY
-})
+// const GenerationConfig = new GenerationConfig({
+//   apiKey: process.env.OPENAI_API_KEY
+// })
 
-const openai = new OpenAIApi(configuration)
+// const openai = new OpenAIApi(GenerationConfig)
+
+const GenerationConfig: GenerationConfig = new GenerationConfig({
+  apiKey: process.env.GEMINI_API_KEY
+});
+
+const gemini = new apiKey(GenerationConfig);
+
 
 export async function POST(req: Request) {
   try {
@@ -22,7 +29,7 @@ export async function POST(req: Request) {
       })
     }
 
-    if (!configuration.apiKey) {
+    if (!GenerationConfig.apiKey) {
       return new NextResponse('OpenAI API Key not configured', {
         status: StatusCodes.INTERNAL_SERVER_ERROR
       })
@@ -46,10 +53,15 @@ export async function POST(req: Request) {
       })
     }
 
-    const { data } = await openai.createChatCompletion({
-      model: 'gpt-3.5-turbo',
-      messages
-    })
+    // const { data } = await openai.createChatCompletion({
+    //   model: 'gpt-3.5-turbo',
+    //   messages
+    // })
+
+    const { data } = await gemini.generateText({
+      model: '1.0-turbo',  // Or another suitable Gemini model
+      prompt: messages
+  });
 
     if (!isPro) await increaseApiLimit()
 
